@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { api } from "../api";
 import { 
@@ -87,8 +87,8 @@ export default function NewCourse() {
               <h3 className="text-sm font-medium mb-2">Upload Syllabus PDF</h3>
               <AutoFileInput 
                 field="syllabus" 
-                onChange={(event) => {
-                  const file = (event.currentTarget as HTMLInputElement)?.files?.[0] || null;
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  const file = event.currentTarget?.files?.[0] || null;
                   if (file) {
                     handleFileUpload(file);
                   }

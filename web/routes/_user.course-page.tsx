@@ -94,7 +94,7 @@ const SideBar = () => {
             <Link 
               to="/courses/new" 
               className="p-1 rounded-full hover:bg-accent"
-              title="Add course"
+              title="Add course fuck"
             >
               <Plus className="h-4 w-4" />
             </Link>

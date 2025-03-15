@@ -97,7 +97,7 @@ const SideBar = () => {
       <div className="h-16 flex items-center px-6 border-b">
         <Link to="/" className="flex items-center">
         <svg width="100" height="100" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-               <rect x="200" y="100" width="80" height = "1" fill="#FF0000" />
+               <rect x="200" y="100" width="80" height = "50" fill="#2EE756" />
                <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
                 EDU
                </text>
