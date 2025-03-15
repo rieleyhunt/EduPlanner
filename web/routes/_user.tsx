@@ -96,11 +96,15 @@ const SideBar = () => {
     <div className="flex flex-col flex-grow bg-background border-r h-full">
       <div className="h-16 flex items-center px-6 border-b">
         <Link to="/" className="flex items-center">
-          <img
-            src="/api/assets/autologo?background=dark"
-            alt="App name"
-            className="h-8 w-auto"
-          />
+        <svg width="100" height="100" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+               <rect x="200" y="100" width="80" height = "1" fill="#FF0000" />
+               <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
+                EDU
+               </text>
+               <text x="50%" y="65%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
+                PLANNER
+               </text>
+              </svg>
         </Link>
       </div>
       <nav className="flex-1 px-4 py-4 space-y-4">

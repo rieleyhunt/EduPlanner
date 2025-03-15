@@ -63,11 +63,8 @@ export default function NewCourse() {
         <CardContent>
           <AutoForm 
             action={api.course.create} 
-            title={false}
             onSuccess={(result) => {
-              if (result.course) {
-                navigate(`/course/${result.course.id}`);
-              }
+              navigate(`/course/${result.id}`);
             }}
             defaultValues={{
               course: {
@@ -90,7 +87,8 @@ export default function NewCourse() {
               <h3 className="text-sm font-medium mb-2">Upload Syllabus PDF</h3>
               <AutoFileInput 
                 field="syllabus" 
-                onChange={(file: File | null) => {
+                onChange={(event) => {
+                  const file = (event.currentTarget as HTMLInputElement)?.files?.[0] || null;
                   if (file) {
                     handleFileUpload(file);
                   }

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Logo</title>
+    <style>
+        .logo {
+            font-family: Arial, sans-serif;
+            font-size: 48px;
+            fill: #000000; /* Change the color of the text */
+        }
+        .logo-circle {
+            fill: #FF0000; /* Change the color of the circle */
+        }
+    </style>
+</head>
+<body>
+    <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+        <!-- Circle element of the logo -->
+        <circle class="logo-circle" cx="100" cy="100" r="80"/>
+        <!-- Text element of the logo -->
+        <text class="logo" x="50%" y="50%" text-anchor="middle" dy=".3em">Logo</text>
+    </svg>
+</body>
+</html>

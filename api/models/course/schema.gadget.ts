@@ -38,7 +38,12 @@ export const schema: GadgetModel = {
       allowPublicAccess: true,
       storageKey: "v4DL3I3zk8X2",
     },
-    syllabusText: { type: "string", storageKey: "1sR6YzPsZsH9" },
+    syllabusText: {
+      type: "string",
+      default:
+        "This course is about object oriented programming and we have a final assignment due on april 21st",
+      storageKey: "1sR6YzPsZsH9",
+    },
     user: {
       type: "belongsTo",
       validations: { required: true },

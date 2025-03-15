@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AutoForm, AutoInput, AutoSubmit } from "@/components/auto";
-import { Download, Upload } from "lucide-react";
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -25,13 +24,6 @@ export default function CourseDetail() {
       startDate: true,
       endDate: true,
       color: true,
-      syllabus: {
-        url: true,
-        fileName: true,
-        mimeType: true,
-        byteSize: true
-      },
-      syllabusText: true,
       user: {
         id: true,
         firstName: true,
@@ -97,100 +89,6 @@ export default function CourseDetail() {
   const startDateFormatted = course.startDate ? format(new Date(course.startDate), "MMMM d, yyyy") : "Not set";
   const endDateFormatted = course.endDate ? format(new Date(course.endDate), "MMMM d, yyyy") : "Not set";
 
-  // Function to generate AI summary from syllabus text
-  const generateAISummary = (text: string) => {
-    if (!text) return null;
-    
-    // This is a simulated AI summary function that extracts assignments and tests
-    const lines = text.split('\n');
-    const assignments: {name: string, dueDate: string}[] = [];
-    const tests: {name: string, date: string}[] = [];
-    
-    // Simple parsing to extract assignments and tests
-    lines.forEach(line => {
-      const lowerLine = line.toLowerCase();
-      // Look for assignment patterns
-      if (lowerLine.includes('assignment') || lowerLine.includes('homework') || lowerLine.includes('project')) {
-        const dateMatch = line.match(/(\d{1,2}\/\d{1,2}\/\d{4}|\d{1,2}\/\d{1,2}|\w+ \d{1,2}(st|nd|rd|th)?)/i);
-        const dueDate = dateMatch ? dateMatch[0] : 'TBD';
-        const name = line.replace(dateMatch ? dateMatch[0] : '', '').trim();
-        assignments.push({ name, dueDate });
-      }
-      // Look for test patterns
-      else if (lowerLine.includes('exam') || lowerLine.includes('test') || lowerLine.includes('quiz') || lowerLine.includes('midterm') || lowerLine.includes('final')) {
-        const dateMatch = line.match(/(\d{1,2}\/\d{1,2}\/\d{4}|\d{1,2}\/\d{1,2}|\w+ \d{1,2}(st|nd|rd|th)?)/i);
-        const date = dateMatch ? dateMatch[0] : 'TBD';
-        const name = line.replace(dateMatch ? dateMatch[0] : '', '').trim();
-        tests.push({ name, date });
-      }
-    });
-    
-    return { assignments, tests };
-  };
-  
-  // Generate summaries if syllabusText exists
-  const aiSummary = course?.syllabusText ? generateAISummary(course.syllabusText) : null;
-  const courseSummary = course?.syllabusText ? generateCourseSummary(course.syllabusText) : null;
-  
-  // Function to generate AI summary of course content, topics, and learning objectives
-  function generateCourseSummary(text: string) {
-    if (!text) return null;
-    
-    // Parse text to extract course content, topics and learning objectives
-    const lines = text.split('\n');
-    const topics: string[] = [];
-    const objectives: string[] = [];
-    let courseOverview = "";
-    
-    // Extract course overview (first substantial paragraph)
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].length > 100) {
-        courseOverview = lines[i];
-        break;
-      } else if (i < 10 && lines[i].length > 50) {
-        courseOverview = lines[i];
-        break;
-      }
-    }
-    
-    // Extract topics and learning objectives
-    lines.forEach(line => {
-      const lowerLine = line.toLowerCase();
-      // Look for topic patterns
-      if (
-        (lowerLine.includes('topic') || lowerLine.includes('module') || lowerLine.includes('unit') || lowerLine.includes('week')) && 
-        line.length < 100 && 
-        line.length > 10
-      ) {
-        const cleanedTopic = line.replace(/^[-•*\d.\s]+(Topic|Module|Unit|Week)[s]?[\d.\s:]+/i, '').trim();
-        if (cleanedTopic && !topics.includes(cleanedTopic)) {
-          topics.push(cleanedTopic);
-        }
-      }
-      
-      // Look for learning objective patterns
-      if (
-        (lowerLine.includes('objective') || lowerLine.includes('goal') || lowerLine.includes('outcome') || lowerLine.includes('learn')) && 
-        line.length < 150 && 
-        line.length > 15
-      ) {
-        const cleanedObjective = line.replace(/^[-•*\d.\s]+(Objective|Goal|Outcome)[s]?[\d.\s:]+/i, '').trim();
-        if (cleanedObjective && !objectives.includes(cleanedObjective)) {
-          objectives.push(cleanedObjective);
-        }
-      }
-    });
-    
-    // Limit to most relevant items
-    const limitedTopics = topics.slice(0, 5);
-    const limitedObjectives = objectives.slice(0, 4);
-    
-    return {
-      overview: courseOverview || "Course overview not available in syllabus.",
-      topics: limitedTopics,
-      objectives: limitedObjectives
-    };
-  }
   return (
     <div className="container mx-auto py-10">
       {/* Course Header */}
@@ -260,139 +158,8 @@ export default function CourseDetail() {
               <CardDescription>Access readings, assignments, and resources</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Syllabus section */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">Syllabus</h3>
-                {course.syllabus?.url ? (
-                  <div className="border rounded-md p-4 flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{course.syllabus.fileName || 'Course Syllabus'}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {course.syllabus.mimeType} {course.syllabus.byteSize ? `(${Math.round(course.syllabus.byteSize / 1024)} KB)` : ''}
-                      </p>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => window.open(course.syllabus?.url, '_blank')}
-                      className="gap-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      Download
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="border rounded-md p-4 bg-muted/50">
-                    <p className="text-muted-foreground mb-2">No syllabus has been uploaded for this course yet.</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => navigate(`/course/${course.id}/edit`)}
-                      className="gap-2"
-                    >
-                      <Upload className="h-4 w-4" />
-                      Upload Syllabus
-                    </Button>
-                  </div>
-                )}
-              </div>
-              
-              {/* AI-generated summary */}
-              {aiSummary ? (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-2">AI-Generated Summary of Important Dates</h3>
-                  <div className="border rounded-md p-4">
-                    {aiSummary.assignments.length > 0 && (
-                      <div className="mb-4">
-                        <h4 className="font-medium mb-2">Upcoming Assignments</h4>
-                        <ul className="space-y-2">
-                          {aiSummary.assignments.map((assignment, index) => (
-                            <li key={index} className="flex justify-between border-b pb-2">
-                              <span>{assignment.name}</span>
-                              <Badge variant="outline">{assignment.dueDate}</Badge>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {aiSummary.tests.length > 0 && (
-                      <div>
-                        <h4 className="font-medium mb-2">Upcoming Tests and Exams</h4>
-                        <ul className="space-y-2">
-                          {aiSummary.tests.map((test, index) => (
-                            <li key={index} className="flex justify-between border-b pb-2">
-                              <span>{test.name}</span>
-                              <Badge variant="outline">{test.date}</Badge>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {aiSummary.assignments.length === 0 && aiSummary.tests.length === 0 && (
-                      <p className="text-muted-foreground">No assignments or tests were found in the syllabus.</p>
-                    )}
-                    
-                    <p className="text-sm text-muted-foreground mt-4">
-                      This is an AI-generated summary based on your course syllabus. Please refer to the actual syllabus for complete details.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                !course.syllabus?.url && (
-                  <div className="mb-6">
-                    <Alert className="bg-muted/50">
-                      <AlertTitle>No course materials available</AlertTitle>
-                      <AlertDescription>
-                        Upload a syllabus to see an AI-generated summary of important dates and course materials.
-                      </AlertDescription>
-                    </Alert>
-                  </div>
-                )
-              )}
-              
-              {/* Additional course materials would go here */}
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Additional Resources</h3>
-                {courseSummary ? (
-                  <div className="border rounded-md p-4">
-                    <h4 className="font-medium mb-2">AI Course Summary</h4>
-                    <div className="mb-4">
-                      <h5 className="text-sm font-semibold text-muted-foreground">Overview</h5>
-                      <p className="mb-3">{courseSummary.overview}</p>
-                    </div>
-                    
-                    {courseSummary.topics.length > 0 && (
-                      <div className="mb-4">
-                        <h5 className="text-sm font-semibold text-muted-foreground">Main Topics</h5>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {courseSummary.topics.map((topic, index) => (
-                            <li key={index}>{topic}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {courseSummary.objectives.length > 0 && (
-                      <div className="mb-4">
-                        <h5 className="text-sm font-semibold text-muted-foreground">Learning Objectives</h5>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {courseSummary.objectives.map((objective, index) => (
-                            <li key={index}>{objective}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    <p className="text-sm text-muted-foreground mt-4">
-                      This is an AI-generated summary of course content based on your syllabus. It represents a computer-generated interpretation of the syllabus content and may not be complete or fully accurate.
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No additional materials have been added to this course yet.</p>
-                )}
-              </div>
+              <p className="text-muted-foreground">No materials have been added to this course yet.</p>
+              {/* This would be populated with actual course materials */}
             </CardContent>
           </Card>
         </TabsContent>
