@@ -3,7 +3,7 @@ import { api } from "../api";
 import { useParams, Link, useNavigate } from "react-router";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, BookOpen, MessageSquare, Pencil, ArrowLeft } from "lucide-react";
+import { CalendarIcon, BookOpen, MessageSquare, Pencil, ArrowLeft, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -11,10 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AutoForm, AutoInput, AutoSubmit } from "@/components/auto";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState } from "react";
 
 export default function CourseDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [{ data: course, fetching, error }] = useFindOne(api.course, id as string, {
     select: {
       id: true,
@@ -32,6 +35,8 @@ export default function CourseDetail() {
       }
     }
   });
+  
+  const [{ fetching: deleting, error: deleteError }, deleteCourse] = useAction(api.course.delete);
 
   if (error) {
     return (
@@ -109,14 +114,24 @@ export default function CourseDetail() {
               </div>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate(`/course/${course.id}/edit`)}
-            className="gap-2"
-          >
-            <Pencil className="h-4 w-4" />
-            Edit Course
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate(`/course/${course.id}/edit`)}
+              className="gap-2"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit Course
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="gap-2 text-red-500 hover:text-red-500 hover:bg-red-100"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -209,6 +224,39 @@ export default function CourseDetail() {
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Courses
         </Button>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Course</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this course? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={async () => {
+                if (course) {
+                  await deleteCourse({ id: course.id });
+                  setIsDeleteDialogOpen(false);
+                  navigate("/");
+                }
+              }}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

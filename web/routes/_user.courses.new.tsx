@@ -14,25 +14,30 @@ import { ArrowLeft } from "lucide-react";
 
 export default function NewCourse() {
   const navigate = useNavigate();
-  const [pdfText, setPdfText] = useState<string | null>(null);
+  const [defaultValues, setDefaultValues] = useState({
+    course: {
+      code: `COURSE-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}`,
+      description: ""
+    }
+  });
   
-  // Generate a structured course code based on current date
-  const today = new Date();
-  const courseCode = `COURSE-${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-  
-  // Create properly formatted ISO date strings
-  const startDate = new Date().toISOString();
-  const endDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-  
-  // Function to handle PDF text extraction
-  const handleFileUpload = async (file: File) => {
+  // Function to handle PDF text extraction when syllabus is uploaded
+  const handleSyllabusUpload = async (file: File | null) => {
     if (!file || !file.type.includes("pdf")) return;
     
     try {
       // For PDF text extraction, we would normally use a library like pdf.js
       // For this implementation, we're simulating the extraction with a simple message
-      // In a real app, you would use a proper PDF parsing library
-      setPdfText(`Text extracted from ${file.name}`);
+      const extractedText = `Text extracted from ${file.name}`;
+      
+      // Update the default values with the extracted text
+      setDefaultValues(prev => ({
+        ...prev,
+        course: {
+          ...prev.course,
+          description: extractedText
+        }
+      }));
     } catch (error) {
       console.error("Error extracting PDF text:", error);
     }
@@ -66,14 +71,7 @@ export default function NewCourse() {
             onSuccess={(result) => {
               navigate(`/course/${result.id}`);
             }}
-            defaultValues={{
-              course: {
-                syllabusText: pdfText || "",
-                code: courseCode,
-                startDate: startDate,
-                endDate: endDate
-              }
-            }}
+            defaultValues={defaultValues}
           >
             <div className="mb-4">
               <AutoInput field="name" />
@@ -84,20 +82,15 @@ export default function NewCourse() {
             <AutoInput field="color" />
 
             <div className="my-4">
-              <h3 className="text-sm font-medium mb-2">Upload Syllabus PDF</h3>
               <AutoFileInput 
                 field="syllabus" 
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  const file = event.currentTarget?.files?.[0] || null;
-                  if (file) {
-                    handleFileUpload(file);
-                  }
-                }}
+                onChange={(file) => handleSyllabusUpload(file)} 
+                accept=".pdf"
               />
-              {pdfText && (
+              {defaultValues.course.description.startsWith("Text extracted") && (
                 <div className="mt-2 p-2 bg-slate-50 rounded border border-slate-200">
                   <p className="text-sm font-medium">Extracted Text:</p>
-                  <p className="text-sm text-slate-600">{pdfText}</p>
+                  <p className="text-sm text-slate-600">{defaultValues.course.description}</p>
                 </div>
               )}
             </div>

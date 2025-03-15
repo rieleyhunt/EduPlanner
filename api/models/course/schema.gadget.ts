@@ -19,7 +19,6 @@ export const schema: GadgetModel = {
     endDate: {
       type: "dateTime",
       includeTime: true,
-      validations: { required: true },
       storageKey: "3XV2-5dLU5hq",
     },
     name: {
@@ -30,8 +29,12 @@ export const schema: GadgetModel = {
     startDate: {
       type: "dateTime",
       includeTime: true,
-      validations: { required: true },
       storageKey: "xgic1GD1udMP",
+    },
+    syllabus: {
+      type: "file",
+      allowPublicAccess: false,
+      storageKey: "5DfNP7tiIpSi",
     },
     user: {
       type: "belongsTo",

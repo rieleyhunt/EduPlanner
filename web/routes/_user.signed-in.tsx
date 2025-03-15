@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card,CardContent  } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DayPicker } from "react-day-picker";
+import {CalendarCard } from "@/components/ui/calendar";
 import "react-day-picker/dist/style.css";
 import { Pencil, Send } from "lucide-react";
 import { useOutletContext } from "react-router";
@@ -61,21 +62,20 @@ export default function () {
     <div className="container mx-auto p-6">
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-6">
-          <Card className="overflow-hidden w-full max-w-md aspect-square border rounded-lg shadow-md bg-white">
-          <CardContent className="h-full flex items-center justify-center">
-              <DayPicker mode="single" className="w-full h-full" />
-              </CardContent>
-           
+          <Card className="overflow-hidden aspect-square border rounded-lg shadow-md ">
+            <CalendarCard/>
+            <CardContent className="h-full flex items-center justify-center">
+              
               <svg width="100" height="100" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-               <circle cx="100" cy="100" r="80" fill="#FF0000" />
-               <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
-                EDU
-               </text>
-               <text x="50%" y="65%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
-                PLANNER
-               </text>
+                <circle cx="100" cy="100" r="80" fill="#FF0000" />
+                <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
+                  EDU
+                </text>
+                <text x="50%" y="65%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
+                  PLANNER
+                </text>
               </svg>
-            
+            </CardContent>
           </Card>
           <Card className="p-6">
             <div className="space-y-6">

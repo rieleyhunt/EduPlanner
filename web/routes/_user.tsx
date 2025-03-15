@@ -97,14 +97,20 @@ const SideBar = () => {
       <div className="h-16 flex items-center px-6 border-b">
         <Link to="/" className="flex items-center">
         <svg width="100" height="100" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-               <rect x="200" y="100" width="80" height = "50" fill="#2EE756" />
-               <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
-                EDU
-               </text>
-               <text x="50%" y="65%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
-                PLANNER
-               </text>
-              </svg>
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#2EE756" />
+              <stop offset="100%" stopColor="#1E8E3C" />
+            </linearGradient>
+          </defs>
+          <rect x="60" y="80" width="200" height="60" fill="#2EE756" />
+          <text x="60%" y="50%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
+            EDU
+          </text>
+          <text x="60%" y="65%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
+            PLANNER
+          </text>
+        </svg>
         </Link>
       </div>
       <nav className="flex-1 px-4 py-4 space-y-4">
