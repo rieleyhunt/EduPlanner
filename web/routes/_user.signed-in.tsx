@@ -1,0 +1,199 @@
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Pencil, Send } from "lucide-react";
+import { useOutletContext } from "react-router";
+import { useState } from "react";
+import type { AuthOutletContext } from "./_user";
+
+export default function () {
+  const { gadgetConfig, user } = useOutletContext<AuthOutletContext>();
+  
+  // Chat state
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content: "Hi there! I'm your EduPlanner assistant. I can help you organize your study schedule, recommend learning resources, or answer questions about your courses. How can I assist you today?"
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState("");
+
+  // Handle sending a message
+  const handleSendMessage = () => {
+    if (!inputMessage.trim()) return;
+    
+    // Add user message
+    const newMessages = [
+      ...messages,
+      { role: "user", content: inputMessage }
+    ];
+    setMessages(newMessages);
+    setInputMessage("");
+    
+    // Simulate AI response
+    setTimeout(() => {
+      setMessages([
+        ...newMessages,
+        { 
+          role: "assistant", 
+          content: `I'm the EduPlanner assistant placeholder. In the future, I'll provide real responses using Google Gemini AI. For now, I'm just echoing: ${inputMessage}`
+        }
+      ]);
+    }, 1000);
+  };
+
+  // Handle input change
+  const handleInputChange = (e) => {
+    setInputMessage(e.target.value);
+  };
+
+  // Handle enter key press
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSendMessage();
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-6">
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-6">
+          <Card className="overflow-hidden">
+            <div className="flex items-start justify-between p-6">
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold">You are now signed in</h2>
+                <div className="space-y-2">
+                  <p className="text-base">
+                    Welcome to <b>EduPlanner</b>, your educational assistant!
+                  </p>
+                  <p className="text-base">
+                    Use the chatbot on the right to help organize your learning journey.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    window.open(
+                      "/edit/files/web/routes/_user.signed-in.tsx",
+                      "_blank"
+                    );
+                  }}
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit this page
+                </Button>
+              </div>
+              <img
+                src="https://assets.gadget.dev/assets/default-app-assets/react-logo.svg"
+                className="app-logo h-24 w-24"
+                alt="logo"
+              />
+            </div>
+          </Card>
+          <Card className="p-6">
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold">Current user</h2>
+              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <dt className="text-sm font-medium text-muted-foreground">
+                    ID
+                  </dt>
+                  <dd className="text-base">{user.id}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-muted-foreground">
+                    Name
+                  </dt>
+                  <dd className="text-base">{`${user.firstName} ${user.lastName}`}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-muted-foreground">
+                    Email
+                  </dt>
+                  <dd className="text-base">
+                    <a
+                      href={`mailto:${user.email}`}
+                      className="text-primary hover:underline"
+                    >
+                      {user.email}
+                    </a>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-muted-foreground">
+                    Created
+                  </dt>
+                  <dd className="text-base">
+                    {user.createdAt.toLocaleString("en-US", { timeZone: "UTC" })} (in UTC)
+                  </dd>
+                </div>
+              </dl>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  This data is fetched from your{" "}
+                  <a
+                    href="/edit/development/models/user"
+                    className="text-primary hover:underline"
+                  >
+                    user
+                  </a>{" "}
+                  via your autogenerated API.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* AI Chatbot */}
+        <Card className="flex flex-col h-full">
+          <div className="p-6 border-b">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">EduPlanner Assistant</h2>
+              <div className="flex items-center space-x-2">
+                <div className="bg-green-500 rounded-full h-3 w-3"></div>
+                <span className="text-sm text-muted-foreground">Powered by Google Gemini</span>
+              </div>
+            </div>
+            <p className="text-muted-foreground mt-2">
+              Ask me about study plans, learning resources, or any course questions.
+            </p>
+          </div>
+          
+          <div className="flex-grow p-4 overflow-auto h-[400px] flex flex-col space-y-4">
+            {messages.map((message, index) => (
+              <div 
+                key={index} 
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div 
+                  className={`max-w-[80%] rounded-lg p-3 ${
+                    message.role === 'user' 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted'
+                  }`}
+                >
+                  {message.content}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="p-4 border-t mt-auto">
+            <div className="flex space-x-2">
+              <Input 
+                value={inputMessage}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyPress}
+                placeholder="Type your message here..."
+                className="flex-grow"
+              />
+              <Button onClick={handleSendMessage} type="submit">
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
