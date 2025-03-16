@@ -127,7 +127,7 @@ export const run: ActionRun = async ({ params, record, logger, api, connections,
           if (courseworkData) {
             // Process coursework data and map to categories
             const processedCoursework: CourseworkItem[] = [];
-            const categoryMap = {
+            const categoryMap: Record<string, keyof CourseworkCategories> = {
               assignments: "assignments",
               homework: "assignments",
               assignment: "assignments",
@@ -173,10 +173,37 @@ export const run: ActionRun = async ({ params, record, logger, api, connections,
             ];
             
             categoriesToProcess.forEach(categoryKey => {
-              // Check if this category exists in courseworkData
-              if (!courseworkData[categoryKey]) return;
+              // Type-safe access to courseworkData properties
+              let items: any[] | undefined;
               
-              const items = courseworkData[categoryKey];
+              switch(categoryKey) {
+                case "assignments":
+                  items = courseworkData.assignments;
+                  break;
+                case "quizzes":
+                  items = courseworkData.quizzes;
+                  break;
+                case "tests":
+                  items = courseworkData.tests;
+                  break;
+                case "midterms":
+                  items = courseworkData.midterms;
+                  break;
+                case "finals":
+                  items = courseworkData.finals;
+                  break;
+                case "projects":
+                  items = courseworkData.projects;
+                  break;
+                case "tutorials":
+                  items = courseworkData.tutorials;
+                  break;
+                case "participation":
+                  items = courseworkData.participation;
+                  break;
+              }
+              
+              if (!items) return;
               
               if (Array.isArray(items) && items.length > 0) {
                 foundCategories.push(`${categoryKey}: ${items.length}`);
@@ -187,7 +214,9 @@ export const run: ActionRun = async ({ params, record, logger, api, connections,
                   if (item && item.name) {
                     // Determine category and normalize it
                     const originalCategory = categoryKey.toLowerCase();
-                    const mappedCategory = categoryMap[originalCategory] || "assignments"; // Default to assignments
+                    const mappedCategory = (originalCategory in categoryMap ? 
+                      categoryMap[originalCategory as keyof typeof categoryMap] : 
+                      "assignments") as keyof CourseworkCategories; // Default to assignments
                     
                     // Create a normalized item
                     const normalizedItem = {
@@ -204,9 +233,7 @@ export const run: ActionRun = async ({ params, record, logger, api, connections,
                     processedCoursework.push(normalizedItem);
                     
                     // Add to appropriate category
-                    if (processedCategories[mappedCategory]) {
-                      processedCategories[mappedCategory].push(normalizedItem);
-                    }
+                    processedCategories[mappedCategory].push(normalizedItem);
                   }
                 });
               }
@@ -221,7 +248,7 @@ export const run: ActionRun = async ({ params, record, logger, api, connections,
                 totalItems,
                 categoriesFound: foundCategories.join(', '),
                 processedCategories: Object.keys(processedCategories).map(key => 
-                  `${key}: ${processedCategories[key].length}`
+                  `${key}: ${processedCategories[key as keyof CourseworkCategories].length}`
                 ).join(', ')
               });
             } else {

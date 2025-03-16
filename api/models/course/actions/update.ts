@@ -13,7 +13,7 @@ export const run: ActionRun = async ({ params, record, logger, api, connections 
       // Extract text from the PDF file
       const extractedText = await extractTextFromPdf(record.syllabus);
       // Update the syllabusText field with the extracted text
-      record.syllabusText = extractedText;
+      (record as any).syllabusText = extractedText;
     } catch (error) {
       logger.error("Failed to extract text from syllabus PDF", { error });
     }

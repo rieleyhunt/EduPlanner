@@ -113,7 +113,7 @@ export async function analyzeStudentQuestion(
     ];
 
     const response = await chatModel.invoke(prompt);
-    return analysisParser.parse(response.content);
+    return analysisParser.parse(response.text);
   } catch (error) {
     console.error("Error analyzing student question:", error);
     return {
@@ -204,7 +204,8 @@ export async function summarizeCourseContent(
     ];
 
     const response = await chatModel.invoke(prompt);
-    return outputParser.parse(response.content as string);
+    
+    return outputParser.parse(response.content);
   } catch (error) {
     console.error("Error summarizing course content:", error);
     return "Error summarizing course content. Please try again later.";

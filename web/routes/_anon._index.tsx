@@ -2,11 +2,34 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router";
 
+function ClockIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="white"
+      className="w-16 h-16 mb-4"
+    >
+      <path
+        fillRule="evenodd"
+        d="M12 2a10 10 0 1 1-10 10 10 10 0 0 1 10-10zm0 2a8 8 0 1 0 8 8 8 8 0 0 0-8-8zm-.75 3.75a.75.75 0 0 1 1.5 0v5l3.25 1.95a.75.75 0 0 1-.75 1.3L11.25 13a.75.75 0 0 1-.75-.75z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
 export default function () {
   return (
-    <div className="relative min-h-screen flex justify-center items-center bg-gradient-to-b from-[#7B00FF] to-[#3800FF]">
-      <h1 className="absolute top-8 text-white text-8x1 font-extrabold">EDUPlanner</h1>
-      <Card className="p-8 max-w-md w-full shadow-lg bg-white rounded-lg animate-fade-in">
+    <div className="relative min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-[#7B00FF] to-[#3800FF]">
+      
+      {/* White Clock Icon */}
+      <ClockIcon />
+
+      {/* Title Header - Large */}
+      <h1 className="text-white text-7xl font-extrabold">EDUPlanner</h1>
+
+      <Card className="p-8 max-w-md w-full shadow-lg bg-white rounded-lg animate-fade-in mt-6">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center text-gray-800">
             🎓 Welcome to EDUPlanner!

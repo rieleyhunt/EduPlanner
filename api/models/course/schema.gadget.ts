@@ -43,6 +43,7 @@ export const schema: GadgetModel = {
       allowPublicAccess: false,
       storageKey: "5DfNP7tiIpSi",
     },
+    syllabusText: { type: "string", storageKey: "anJArmSuDp7M" },
     user: {
       type: "belongsTo",
       validations: { required: true },
