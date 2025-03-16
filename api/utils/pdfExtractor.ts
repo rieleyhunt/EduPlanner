@@ -1,5 +1,4 @@
 import pdfParse from 'pdf-parse';
-import got from 'got';
 import { logger } from 'gadget-server';
 
 /**
@@ -15,6 +14,9 @@ export const extractTextFromPdf = async (file: { url: string; mimeType: string }
       return '';
     }
 
+    // Dynamically import got
+    const { default: got } = await import('got');
+    
     // Fetch the file content from the URL
     const fileBuffer = await got(file.url).buffer();
     

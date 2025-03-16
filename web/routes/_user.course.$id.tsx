@@ -18,6 +18,8 @@ export default function CourseDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [materialText, setMaterialText] = useState("");
+  const [materials, setMaterials] = useState<string[]>([]);
   const [{ data: course, fetching, error }] = useFindOne(api.course, id as string, {
     select: {
       id: true,
@@ -173,8 +175,39 @@ export default function CourseDetail() {
               <CardDescription>Access readings, assignments, and resources</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">No materials have been added to this course yet.</p>
-              {/* This would be populated with actual course materials */}
+              {/* Input to add a new course note */}
+              <div className="mb-4">
+                <input 
+                  type="text" 
+                  placeholder="Enter course note..." 
+                  value={materialText}
+                  onChange={(e) => setMaterialText(e.target.value)}
+                  className="px-3 py-2 border rounded-md mr-2"
+                />
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    if (materialText.trim()) {
+                      setMaterials([...materials, materialText]);
+                      setMaterialText("");
+                    }
+                  }}
+                >
+                  Add Note
+                </Button>
+              </div>
+              {/* Display added course notes in a scrollable list */}
+              <div className="max-h-48 overflow-y-auto border p-2">
+                {materials.length > 0 ? (
+                  materials.map((note, index) => (
+                    <div key={index} className="border-b py-1">
+                      {note}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground italic">No materials have been added to this course yet.</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -5,49 +5,38 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import "react-day-picker/dist/style.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { DayPicker } from 'react-day-picker';
+import{ useState } from "react"
 import * as React from "react";
 import { labelNext, labelPrevious, useDayPicker, type DayPickerProps } from "react-day-picker";
 
-const CalendarCard = () => {
-  const renderDay = (day: Date) => {
-    return (
-      <div className="flex flex-col items-center justify-center w-14 h-14 border rounded-md bg-gray-100 relative">
-        <span className="text-sm font-medium">{day.getDate()}</span>
-        
-        {/* Add extra content here */}
-        {/* Example of adding a "due" dot */}
-        <div className="absolute top-2 right-2 text-xs text-red-500">●</div>
-
-        {/* You can add more elements inside the day */}
-        <div className="absolute bottom-2 left-2 text-xs text-gray-600">Some Event</div>
-      </div>
-    );
-  };
-
+const CalendarCard = ({ className = "", showOutsideDays = true, ...props }) =>{
   return (
-    <div className="w-full max-w-md border rounded-lg shadow-md bg-white">
-      <div className="h-full flex flex-col items-center justify-center p-4">
-        {/* Weekday headers */}
-        <div className="w-full grid grid-cols-7 gap-2 text-center font-bold mb-2">
-          <div>Sun</div>
-          <div>Mon</div>
-          <div>Tue</div>
-          <div>Wed</div>
-          <div>Thu</div>
-          <div>Fri</div>
-          <div>Sat</div>
-        </div>
-        
-        {/* Calendar grid */}
-        <DayPicker 
-          mode="single" // Single day selection mode
-          className="w-full h-full grid grid-cols-7 gap-2" // Tailwind CSS grid layout with 7 columns
-          components={{ Day: (props) => <>{renderDay(props.day.date)}</> }} // Custom day renderer
-        />
-      </div>
-    </div>
+    <DayPicker
+      showOutsideDays={showOutsideDays}
+      className={cn("p-3", className)}
+      components={{
+        Day: ({ day, className }) => (
+          <div className={cn("grid grid-cols-7 gap-2 items-center", className)}>
+            <button
+              className={cn(
+                buttonVariants({ variant: "ghost" }),
+                "size-8 rounded-md p-0 font-normal transition-none"
+              )}
+            >
+              {day.date.getDate()}
+            </button>
+            <div className="flex h-16 w-16 items-center justify-center border border-gray-300 rounded-md">
+              {/* Add content here for each day */}
+              Events
+            </div>
+          </div>
+        ),
+      }}
+      {...props}
+    />
   );
-};
+}
+
 
 
 export type CalendarProps = DayPickerProps & {
@@ -95,7 +84,7 @@ type NavView = "days" | "years";
  * @default yearRange 12
  * @returns
  */
-function Calendar({ className, showOutsideDays = true, showYearSwitcher = true, yearRange = 12, numberOfMonths, ...props }: CalendarProps) {
+export function Calendar({ className, showOutsideDays = true, showYearSwitcher = true, yearRange = 12, numberOfMonths, ...props }: CalendarProps) {
   const [navView, setNavView] = React.useState<NavView>("days");
   const [displayYears, setDisplayYears] = React.useState<{
     from: number;
@@ -234,7 +223,7 @@ function Calendar({ className, showOutsideDays = true, showYearSwitcher = true, 
 Calendar.displayName = "Calendar";
 
 function Nav({
-  className,
+  className  = "",
   navView,
   startMonth,
   endMonth,
@@ -444,4 +433,4 @@ function YearGrid({
   );
 }
 
-export { Calendar, CalendarCard };
+export { CalendarCard };

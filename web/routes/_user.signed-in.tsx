@@ -1,17 +1,189 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Card,CardContent  } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { DayPicker } from "react-day-picker";
-import {CalendarCard } from "@/components/ui/calendar";
-import "react-day-picker/dist/style.css";
-import { Pencil, Send } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Clock, CalendarIcon, Send, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useOutletContext } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useFindMany } from "@gadgetinc/react";
+import { api } from "../api";
 import type { AuthOutletContext } from "./_user";
 
 export default function () {
   const { gadgetConfig, user } = useOutletContext<AuthOutletContext>();
+  
+  // State for calendar and deadlines
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [deadlines, setDeadlines] = useState<Array<{
+    id: string;
+    title: string;
+    date: Date;
+    course: string;
+    courseId: string;
+    description?: string;
+    color?: string;
+    priority?: 'high' | 'medium' | 'low';
+  }>>([]);
+  const [daysWithDeadlines, setDaysWithDeadlines] = useState<Date[]>([]);
+  
+  // Fetch user courses
+  const [{ data: courses, fetching, error }] = useFindMany(api.course, {
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      color: true,
+      code: true,
+      startDate: true,
+      endDate: true,
+    }
+  });
+  
+  // Extract deadlines from course descriptions
+  useEffect(() => {
+    if (!courses) return;
+    
+    const extractedDeadlines: typeof deadlines = [];
+    
+    courses.forEach(course => {
+      if (!course.description) return;
+      
+      // Simple regex to find dates in descriptions (MM/DD/YYYY or Month DD, YYYY)
+      const dateRegex = /(\d{1,2}\/\d{1,2}\/\d{4}|[A-Z][a-z]+ \d{1,2},? \d{4})/g;
+      const matches = course.description.match(dateRegex) || [];
+      
+      // Extract small snippets around the dates to get context
+      matches.forEach(match => {
+        const dateIndex = course.description!.indexOf(match);
+        const startIndex = Math.max(0, dateIndex - 50);
+        const endIndex = Math.min(course.description!.length, dateIndex + 50);
+        const context = course.description!.substring(startIndex, endIndex);
+        
+        // Try to determine if it's a deadline, assignment, etc.
+        const isDeadline = /deadline|due|submit|assignment|exam|quiz/i.test(context);
+        if (!isDeadline) return;
+        
+        // Create a date object
+        let deadlineDate: Date;
+        try {
+          deadlineDate = new Date(match);
+          // Check if it's a valid date
+          if (isNaN(deadlineDate.getTime())) return;
+        } catch (e) {
+          return;
+        }
+        
+        // Determine priority based on context
+        let priority: 'high' | 'medium' | 'low' = 'medium';
+        if (/exam|final|midterm|important/i.test(context)) {
+          priority = 'high';
+        } else if (/quiz|minor|small/i.test(context)) {
+          priority = 'low';
+        }
+        
+        // Extract a title
+        let title = 'Deadline';
+        if (context.includes('assignment')) title = 'Assignment';
+        if (context.includes('exam')) title = 'Exam';
+        if (context.includes('quiz')) title = 'Quiz';
+        if (context.includes('project')) title = 'Project';
+        
+        // Add to deadlines
+        extractedDeadlines.push({
+          id: `${course.id}-${extractedDeadlines.length}`,
+          title,
+          date: deadlineDate,
+          course: course.name,
+          courseId: course.id,
+          description: context,
+          color: course.color || undefined,
+          priority,
+        });
+      });
+    });
+    
+    // Add some fallback data if no deadlines were found
+    if (extractedDeadlines.length === 0 && courses.length > 0) {
+      // Add course start and end dates as important dates
+      courses.forEach(course => {
+        if (course.startDate) {
+          extractedDeadlines.push({
+            id: `${course.id}-start`,
+            title: 'Course Start',
+            date: new Date(course.startDate),
+            course: course.name,
+            courseId: course.id,
+            color: course.color || undefined,
+            priority: 'medium',
+          });
+        }
+        
+        if (course.endDate) {
+          extractedDeadlines.push({
+            id: `${course.id}-end`,
+            title: 'Course End',
+            date: new Date(course.endDate),
+            course: course.name,
+            courseId: course.id,
+            color: course.color || undefined,
+            priority: 'high',
+          });
+        }
+      });
+    }
+    
+    // Sort by date
+    extractedDeadlines.sort((a, b) => a.date.getTime() - b.date.getTime());
+    setDeadlines(extractedDeadlines);
+    
+    // Set days with deadlines for calendar indicators
+    setDaysWithDeadlines(extractedDeadlines.map(d => d.date));
+  }, [courses]);
+  
+  // Get upcoming deadlines (in next 14 days)
+  const upcomingDeadlines = deadlines
+    .filter(d => {
+      const now = new Date();
+      const deadline = new Date(d.date);
+      const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays <= 14;
+    })
+    .sort((a, b) => {
+      // Sort by priority, then by date
+      if (a.priority !== b.priority) {
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        return priorityOrder[a.priority || 'medium'] - priorityOrder[b.priority || 'medium'];
+      }
+      return a.date.getTime() - b.date.getTime();
+    });
+  
+  // Get selected day deadlines
+  const selectedDayDeadlines = date 
+    ? deadlines.filter(d => 
+        d.date.getDate() === date.getDate() && 
+        d.date.getMonth() === date.getMonth() && 
+        d.date.getFullYear() === date.getFullYear()
+      )
+    : [];
+  
+  // Calendar day renderer with indicators
+  const getDayClassNames = (day: Date) => {
+    const hasDeadline = daysWithDeadlines.some(d => 
+      d.getDate() === day.getDate() && 
+      d.getMonth() === day.getMonth() && 
+      d.getFullYear() === day.getFullYear()
+    );
+    
+    if (hasDeadline) {
+      return "relative before:absolute before:h-1 before:w-1 before:bg-red-500 before:rounded-full before:top-0 before:left-1/2 before:-translate-x-1/2";
+    }
+    
+    return "";
+  };
   
   // Chat state
   const [messages, setMessages] = useState([
@@ -21,7 +193,7 @@ export default function () {
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
-
+  
   // Handle sending a message
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
@@ -34,16 +206,33 @@ export default function () {
     setMessages(newMessages);
     setInputMessage("");
     
-    // Simulate AI response
-    setTimeout(() => {
-      setMessages([
-        ...newMessages,
-        { 
-          role: "assistant", 
-          content: `I'm the EduPlanner assistant placeholder. In the future, I'll provide real responses using Google Gemini AI. For now, I'm just echoing: ${inputMessage}`
-        }
-      ]);
-    }, 1000);
+    // Add deadlines context if message mentions deadlines
+    if (inputMessage.toLowerCase().includes('deadline') || inputMessage.toLowerCase().includes('assignment')) {
+      const deadlineContext = upcomingDeadlines.length > 0 
+        ? `I see you have ${upcomingDeadlines.length} upcoming deadlines. The most urgent one is ${upcomingDeadlines[0].title} for ${upcomingDeadlines[0].course} on ${upcomingDeadlines[0].date.toLocaleDateString()}.`
+        : "I don't see any upcoming deadlines in your schedule.";
+      
+      setTimeout(() => {
+        setMessages([
+          ...newMessages,
+          { 
+            role: "assistant", 
+            content: `${deadlineContext} How can I help you with your schedule?`
+          }
+        ]);
+      }, 1000);
+    } else {
+      // Regular response
+      setTimeout(() => {
+        setMessages([
+          ...newMessages,
+          { 
+            role: "assistant", 
+            content: `I'm the EduPlanner assistant. I can see your calendar has ${deadlines.length} total deadlines across ${courses?.length || 0} courses. What would you like to know about your schedule?`
+          }
+        ]);
+      }, 1000);
+    }
   };
 
   // Handle input change
@@ -62,21 +251,159 @@ export default function () {
     <div className="container mx-auto p-6">
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-6">
-          <Card className="overflow-hidden aspect-square border rounded-lg shadow-md ">
-            <CalendarCard/>
-            <CardContent className="h-full flex items-center justify-center">
-              
-              <svg width="100" height="100" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="100" cy="100" r="80" fill="#FF0000" />
-                <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
-                  EDU
-                </text>
-                <text x="50%" y="65%" textAnchor="middle" dominantBaseline="middle" fontSize="24" fill="#ffffff" fontFamily="Arial" fontWeight="bold">
-                  PLANNER
-                </text>
-              </svg>
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                <span>Academic Calendar</span>
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <CalendarIcon className="w-3 h-3" /> {deadlines.length} deadlines
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6 md:grid-cols-5">
+                <div className="md:col-span-3">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    className="rounded-md border"
+                    classNames={{
+                      day_today: "bg-primary text-primary-foreground",
+                      day_selected: "bg-primary text-primary-foreground font-bold",
+                    }}
+                    modifiers={{
+                      highlight: daysWithDeadlines,
+                    }}
+                    modifiersClassNames={{
+                      highlight: getDayClassNames(new Date()),
+                    }}
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <Tabs defaultValue="upcoming" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                      <TabsTrigger value="selected">Selected Day</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="upcoming" className="p-0">
+                      <Card>
+                        <CardHeader className="p-3">
+                          <CardTitle className="text-sm font-medium">Upcoming Deadlines</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                          <ScrollArea className="h-[220px]">
+                            <div className="p-3 space-y-3">
+                              {upcomingDeadlines.length === 0 ? (
+                                <div className="text-sm text-muted-foreground text-center p-4">
+                                  No upcoming deadlines
+                                </div>
+                              ) : (
+                                upcomingDeadlines.map((deadline) => (
+                                  <div 
+                                    key={deadline.id}
+                                    className="p-2 rounded-md border text-sm"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div 
+                                        className="flex items-center gap-2"
+                                        style={{ color: deadline.color || "inherit" }}
+                                      >
+                                        {deadline.priority === 'high' ? (
+                                          <AlertCircle className="w-4 h-4 text-red-500" />
+                                        ) : deadline.priority === 'low' ? (
+                                          <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                        ) : (
+                                          <Clock className="w-4 h-4 text-yellow-500" />
+                                        )}
+                                        <span className="font-medium">{deadline.title}</span>
+                                      </div>
+                                      <Badge 
+                                        variant="outline" 
+                                        style={{ 
+                                          backgroundColor: deadline.color ? `${deadline.color}20` : undefined,
+                                          borderColor: deadline.color || undefined
+                                        }}
+                                      >
+                                        {deadline.course}
+                                      </Badge>
+                                    </div>
+                                    <div className="mt-1 flex justify-between">
+                                      <span className="text-xs text-muted-foreground">
+                                        {deadline.date.toLocaleDateString()}
+                                      </span>
+                                      <span className="text-xs">
+                                        {Math.ceil((deadline.date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </ScrollArea>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                    
+                    <TabsContent value="selected" className="p-0">
+                      <Card>
+                        <CardHeader className="p-3">
+                          <CardTitle className="text-sm font-medium">
+                            {date ? date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Select a date'}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                          <ScrollArea className="h-[220px]">
+                            <div className="p-3 space-y-3">
+                              {selectedDayDeadlines.length === 0 ? (
+                                <div className="text-sm text-muted-foreground text-center p-4">
+                                  No deadlines for this date
+                                </div>
+                              ) : (
+                                selectedDayDeadlines.map((deadline) => (
+                                  <div 
+                                    key={deadline.id}
+                                    className="p-2 rounded-md border"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span 
+                                        className="font-medium" 
+                                        style={{ color: deadline.color || "inherit" }}
+                                      >
+                                        {deadline.title}
+                                      </span>
+                                      <Badge 
+                                        variant="outline" 
+                                        style={{ 
+                                          backgroundColor: deadline.color ? `${deadline.color}20` : undefined,
+                                          borderColor: deadline.color || undefined
+                                        }}
+                                      >
+                                        {deadline.course}
+                                      </Badge>
+                                    </div>
+                                    {deadline.description && (
+                                      <p className="mt-2 text-xs text-muted-foreground">
+                                        {deadline.description.substring(0, 100)}
+                                        {deadline.description.length > 100 ? "..." : ""}
+                                      </p>
+                                    )}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </ScrollArea>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
             </CardContent>
           </Card>
+          
           <Card className="p-6">
             <div className="space-y-6">
               <h2 className="text-xl font-semibold">Current user</h2>

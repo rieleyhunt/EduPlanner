@@ -22,7 +22,26 @@ export default function NewCourse() {
   });
   
   // Function to handle PDF text extraction when syllabus is uploaded
-  const handleSyllabusUpload = async (file: File | null) => {
+  const handleSyllabusUpload = async (fileOrEvent: File | null | any) => {
+    // If fileOrEvent is not a File object or null, it's likely an event
+    // Extract the file from the event if possible
+    let file: File | null = null;
+    
+    if (fileOrEvent instanceof File) {
+      // It's already a File object
+      file = fileOrEvent;
+    } else if (fileOrEvent === null) {
+      // It's explicitly null
+      return;
+    } else if (fileOrEvent && fileOrEvent.target && fileOrEvent.target.files) {
+      // It's likely an input change event with files
+      file = fileOrEvent.target.files[0] || null;
+    } else {
+      // We can't determine what it is, so return early
+      console.warn('Unexpected input type for handleSyllabusUpload');
+      return;
+    }
+    
     if (!file || !file.type.includes("pdf")) return;
     
     try {
@@ -85,8 +104,8 @@ export default function NewCourse() {
               <AutoFileInput 
                 field="syllabus" 
                 onChange={(file) => handleSyllabusUpload(file)} 
-                accept=".pdf"
               />
+              <p className="mt-1 text-sm text-slate-500">Note: Only PDF files are accepted.</p>
               {defaultValues.course.description.startsWith("Text extracted") && (
                 <div className="mt-2 p-2 bg-slate-50 rounded border border-slate-200">
                   <p className="text-sm font-medium">Extracted Text:</p>
