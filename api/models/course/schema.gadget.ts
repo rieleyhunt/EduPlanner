@@ -9,12 +9,19 @@ export const schema: GadgetModel = {
   comment:
     "Represents a course that a user can add to their profile, capturing essential details such as name, code, and duration.",
   fields: {
+    aiSummary: { type: "string", storageKey: "QGNgCfIltqMy" },
     code: {
       type: "string",
       validations: { required: true },
       storageKey: "CHImcvX5AOhn",
     },
     color: { type: "color", storageKey: "wWoOkP49eOQJ" },
+    coursework: { type: "json", storageKey: "BhYHFUKBtO39" },
+    courseworkCategories: {
+      type: "json",
+      default: "{}",
+      storageKey: "txAPOlg9La6n",
+    },
     description: { type: "string", storageKey: "wGtpPTTZAhSF" },
     endDate: {
       type: "dateTime",

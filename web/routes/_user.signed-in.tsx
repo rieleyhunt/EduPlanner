@@ -6,7 +6,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, CalendarIcon, Send, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Clock, CalendarIcon, Send, AlertCircle, CheckCircle2, FileText, Clipboard, ClipboardCheck, FolderKanban } from "lucide-react";
 import { useOutletContext } from "react-router";
 import { useState, useEffect } from "react";
 import { useFindMany } from "@gadgetinc/react";
@@ -283,9 +284,10 @@ export default function () {
                 
                 <div className="md:col-span-2">
                   <Tabs defaultValue="upcoming" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
                       <TabsTrigger value="selected">Selected Day</TabsTrigger>
+                      <TabsTrigger value="courses">Course Schedule</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="upcoming" className="p-0">
@@ -398,63 +400,114 @@ export default function () {
                         </CardContent>
                       </Card>
                     </TabsContent>
+                    
+                    <TabsContent value="courses" className="p-0">
+                      <Card>
+                        <CardHeader className="p-3">
+                          <CardTitle className="text-sm font-medium">
+                            Course Schedule
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                          <ScrollArea className="h-[220px]">
+                            <div className="p-3 space-y-3">
+                              {courses?.length === 0 ? (
+                                <div className="text-sm text-muted-foreground text-center p-4">
+                                  No courses found
+                                </div>
+                              ) : (
+                                <Accordion type="single" collapsible className="w-full">
+                                  {courses?.map(course => {
+                                    // Get deadlines for this course
+                                    const courseDeadlines = deadlines.filter(d => d.courseId === course.id)
+                                      .sort((a, b) => a.date.getTime() - b.date.getTime());
+                                    
+                                    return (
+                                      <AccordionItem key={course.id} value={course.id}>
+                                        <AccordionTrigger className="px-3 py-2">
+                                          <div className="flex items-center gap-2">
+                                            <div 
+                                              className="w-3 h-3 rounded-full" 
+                                              style={{ backgroundColor: course.color || "#cbd5e1" }}
+                                            />
+                                            <span>{course.name}</span>
+                                            <Badge 
+                                              className="ml-2"
+                                              variant="outline"
+                                            >
+                                              {courseDeadlines.length} deadline{courseDeadlines.length !== 1 ? 's' : ''}
+                                            </Badge>
+                                          </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                          <div className="space-y-2 pl-4 pr-2">
+                                            {courseDeadlines.length === 0 ? (
+                                              <div className="text-sm text-muted-foreground px-2 py-1">
+                                                No deadlines detected
+                                              </div>
+                                            ) : (
+                                              courseDeadlines.map(deadline => (
+                                                <div 
+                                                  key={deadline.id} 
+                                                  className="p-2 border rounded-md"
+                                                >
+                                                  <div className="flex items-center gap-2">
+                                                    {deadline.title === 'Exam' || deadline.title === 'Midterm' || deadline.title === 'Final' ? (
+                                                      <FileText className="w-4 h-4 text-red-500" />
+                                                    ) : deadline.title === 'Quiz' ? (
+                                                      <ClipboardCheck className="w-4 h-4 text-yellow-500" />
+                                                    ) : deadline.title === 'Assignment' ? (
+                                                      <Clipboard className="w-4 h-4 text-blue-500" />
+                                                    ) : deadline.title === 'Project' ? (
+                                                      <FolderKanban className="w-4 h-4 text-purple-500" />
+                                                    ) : (
+                                                      <Calendar className="w-4 h-4 text-gray-500" />
+                                                    )}
+                                                    
+                                                    <span 
+                                                      className="font-medium"
+                                                      style={{ 
+                                                        color: deadline.priority === 'high' ? '#ef4444' : 
+                                                                deadline.priority === 'medium' ? '#f59e0b' : 
+                                                                '#10b981'
+                                                      }}
+                                                    >
+                                                      {deadline.title}
+                                                    </span>
+                                                  </div>
+                                                  <div className="mt-1 text-xs flex justify-between">
+                                                    <span>
+                                                      {deadline.date.toLocaleDateString()}
+                                                    </span>
+                                                    <span>
+                                                      {Math.ceil((deadline.date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
+                                                    </span>
+                                                  </div>
+                                                  {deadline.description && (
+                                                    <p className="mt-1 text-xs text-muted-foreground">
+                                                      {deadline.description.substring(0, 100)}
+                                                      {deadline.description.length > 100 ? "..." : ""}
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              ))
+                                            )}
+                                          </div>
+                                        </AccordionContent>
+                                      </AccordionItem>
+                                    );
+                                  })}
+                                </Accordion>
+                              )}
+                            </div>
+                          </ScrollArea>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
                   </Tabs>
                 </div>
               </div>
             </CardContent>
-          </Card>
-          
-          <Card className="p-6">
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold">Current user</h2>
-              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground">
-                    ID
-                  </dt>
-                  <dd className="text-base">{user.id}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground">
-                    Name
-                  </dt>
-                  <dd className="text-base">{`${user.firstName} ${user.lastName}`}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground">
-                    Email
-                  </dt>
-                  <dd className="text-base">
-                    <a
-                      href={`mailto:${user.email}`}
-                      className="text-primary hover:underline"
-                    >
-                      {user.email}
-                    </a>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground">
-                    Created
-                  </dt>
-                  <dd className="text-base">
-                    {user.createdAt.toLocaleString("en-US", { timeZone: "UTC" })} (in UTC)
-                  </dd>
-                </div>
-              </dl>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  This data is fetched from your{" "}
-                  <a
-                    href="/edit/development/models/user"
-                    className="text-primary hover:underline"
-                  >
-                    user
-                  </a>{" "}
-                  via your autogenerated API.
-                </p>
-              </div>
-            </div>
           </Card>
         </div>
 
